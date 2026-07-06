@@ -1,15 +1,18 @@
 import { formatUnits } from "viem";
-import { useBalance } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 
-const TEST_ADDRESS = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+// const TEST_ADDRESS = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
 
-export function BalanaceInfo() { 
+export function BalanaceInfo() {
+    const account = useAccount();
+     
     const { data, isPending, error } = useBalance({
-        address : TEST_ADDRESS,
+        address : account.address,
+        query: {
+            enabled: !!account.address
+        }
     })
 
-    console.log(data?.formatted);
-    
     return (
             <div style={{ border: "1px solid green", padding: '1rem'}}>
                 <div>
