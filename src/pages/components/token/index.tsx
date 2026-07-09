@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { isAddress, type Address } from "viem";
+import { useAccount } from "wagmi";
+import { mainnet, sepolia } from "wagmi/chains";
 import { erc20Abi } from "../../../abis/erc20";
 
 // ─────────────────────────────────────────────────────────────
@@ -13,35 +15,119 @@ import { erc20Abi } from "../../../abis/erc20";
 // erc20Abi는 src/abis/erc20.ts 에 준비됨.
 // ─────────────────────────────────────────────────────────────
 
+// 테스트용 예시 토큰 주소. 주소는 네트워크마다 다르므로 chainId를 함께 둠.
+const EXAMPLE_TOKENS = [
+  { network: "Sepolia", chainId: sepolia.id, symbol: "USDC (Circle 테스트)", address: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", decimals: 6 },
+  { network: "Sepolia", chainId: sepolia.id, symbol: "WETH", address: "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14", decimals: 18 },
+  { network: "Ethereum 메인넷", chainId: mainnet.id, symbol: "USDC", address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6 },
+  { network: "Ethereum 메인넷", chainId: mainnet.id, symbol: "DAI", address: "0x6B175474E89094C44Da98b954EedeAC495271d0F", decimals: 18 },
+] as const;
+
 export function TokenDashboard() {
   const [input, setInput] = useState("");
+  const [isValidAddress, setIsValidAddress] = useState(true); 
 
-  // 주제 1. 주소 형식 검증 — isAddress로 유효한 주소인지 체크
-  const trimmed = input.trim();
-  const isValid = isAddress(trimmed);
-  const showError = trimmed.length > 0 && !isValid;
+  const isValidTokenAddress = (value: string) => {
+     if(isAddress(value.trim()) === true) {
+      setIsValidAddress(true);
+     }else {
+      setIsValidAddress(false)
+     }
+  };
 
   return (
     <div style={{ border: "1px solid orange", padding: "1rem" }}>
       <strong>Token Dashboard</strong>
 
       {/* 주제 1. 토큰 주소 입력 폼 */}
-      <div style={{ marginTop: "0.5rem" }}>
+      <div style={{ marginTop: "0.5rem", display: 'flex' }}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="ERC-20 토큰 컨트랙트 주소 (0x...)"
           style={{ width: "100%", padding: "0.4rem", boxSizing: "border-box" }}
         />
-        {showError && (
-          <p style={{ color: "red", margin: "0.25rem 0 0" }}>
-            유효한 주소가 아닙니다.
-          </p>
-        )}
+          <button
+              type="button"
+              onClick={() => isValidTokenAddress(input)}
+            >
+              주소 정보 보기
+          </button>
       </div>
 
-      {/* 유효한 주소일 때만 정보 읽기 시도 */}
-      {isValid && <TokenInfo tokenAddress={trimmed as Address} />}
+      {!isValidAddress && <strong style={{ color: 'red' }}>유효하지 않은 주소입니다.</strong>}
+      
+      {/* 테스트용 예시 주소 (복사 / 입력) */}
+      <ExampleTokens onPick={setInput} />
+
+      <TokenInfo tokenAddress={input as Address}/>
+    </div>
+  );
+}
+
+// 테스트용 예시 주소 목록. 현재 연결된 네트워크와 chainId가 일치할 때만 복사 활성화.
+function ExampleTokens({ onPick }: { onPick: (address: string) => void }) {
+  const { chainId } = useAccount();
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const handleCopy = async (address: string) => {
+    await navigator.clipboard.writeText(address);
+    setCopied(address);
+  };
+
+  return (
+    <div style={{ marginTop: "0.75rem", fontSize: "0.85rem" }}>
+      <div style={{ color: "#888", marginBottom: "0.35rem" }}>
+        테스트용 예시 주소{" "}
+        {chainId ? `(현재 네트워크 chainId: ${chainId})` : "(지갑 미연결)"}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+        {EXAMPLE_TOKENS.map((token) => {
+          // 현재 연결된 네트워크와 토큰의 네트워크가 같아야 실제로 읽을 수 있음
+          const usable = chainId === token.chainId;
+          const isCopied = copied === token.address;
+
+          return (
+            <div
+              key={token.address}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.35rem 0.5rem",
+                border: "1px solid #eee",
+                borderRadius: 4,
+                opacity: usable ? 1 : 0.45,
+              }}
+            >
+              <span style={{ width: 110, color: "#666" }}>{token.network}</span>
+              <span style={{ width: 150 }}>{token.symbol}</span>
+              <code style={{ flex: 1, fontFamily: "monospace" }}>
+                {token.address}
+              </code>
+              <span style={{ width: 40, color: "#999" }}>d{token.decimals}</span>
+
+              <button
+                type="button"
+                disabled={!usable}
+                onClick={() => handleCopy(token.address)}
+                title={usable ? "주소 복사" : "현재 네트워크와 달라 사용할 수 없음"}
+              >
+                {isCopied ? "복사됨" : "복사"}
+              </button>
+              <button
+                type="button"
+                disabled={!usable}
+                onClick={() => onPick(token.address)}
+                title={usable ? "입력창에 채우기" : "현재 네트워크와 달라 사용할 수 없음"}
+              >
+                입력
+              </button>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -49,22 +135,7 @@ export function TokenDashboard() {
 // ─────────────────────────────────────────────────────────────
 // 여기서부터 손으로 구현 ✋
 // ─────────────────────────────────────────────────────────────
-function TokenInfo({ tokenAddress }: { tokenAddress: Address }) {
-  // TODO 주제 2. ERC-20 정보 읽기 (ABI로 읽기)
-  //   - useReadContract 로 name / symbol / decimals / balanceOf 읽기
-  //     · abi: erc20Abi, address: tokenAddress, functionName: 'name' ...
-  //     · balanceOf 는 args 로 조회할 주소가 필요 → args: [account.address]
-  //   - useReadContracts 로 위 값들을 하나로 묶어 멀티콜(배칭) → RPC 1번에 조회
-  //
-  // TODO 주제 3. 단위 변환
-  //   - balanceOf 가 준 raw 값(bigint) → formatUnits(value, decimals) 로 변환
-  //   - decimals 는 절대 하드코딩 금지 — 컨트랙트에서 읽은 값을 그대로 사용
-  //
-  // TODO 주제 4. 상태 처리
-  //   - isLoading → 스켈레톤/스피너
-  //   - isError   → 존재하지 않는 컨트랙트 / ERC-20 아님
-  //   - 지갑 미연결 시 balanceOf 분기 처리
-
+function TokenInfo({ tokenAddress }: { tokenAddress: Address | null }) {
   return (
     <div style={{ marginTop: "0.75rem", opacity: 0.7 }}>
       <p style={{ margin: 0 }}>주소: {tokenAddress}</p>
