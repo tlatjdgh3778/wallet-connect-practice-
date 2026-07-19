@@ -43,4 +43,40 @@ export const erc20Abi = [
     ],
     outputs: [{ type: 'uint256' }],
   },
+
+  // ── 여기부터 쓰기 함수 (3주차) ──────────────────────────────
+  // stateMutability가 'view'가 아니라 'nonpayable' — ABI에서 이 필드가 읽기/쓰기를 가른다.
+  // 'view'는 노드에 물어보기만 하면 되지만(공짜), 'nonpayable'은 상태를 바꾸므로
+  // 트랜잭션 = 가스 + 지갑 서명이 필요하다.
+  {
+    type: 'function',
+    name: 'approve',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'transfer',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'transferFrom',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'from', type: 'address' },
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ type: 'bool' }],
+  },
 ] as const;

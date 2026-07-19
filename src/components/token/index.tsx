@@ -3,6 +3,7 @@ import { formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { useAccount, useReadContracts } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
 import { erc20Abi } from "../../abis/erc20";
+import { AllowancePanel } from "./AllowancePanel";
 
 // ─────────────────────────────────────────────────────────────
 // 실습 2주차 · 토큰 대시보드 (컨트랙트 읽기 + ABI + ERC-20)
@@ -178,7 +179,14 @@ function TokenInfo({ tokenAddress }: { tokenAddress: Address }) {
               <p style={{ margin: "0.25rem 0 0" }}>토큰 잔액 : {balanceOf?.status === 'success' && decimals?.status === 'success' &&  formatUnits(balanceOf.result, decimals.result)}</p>
 
               {decimals?.status === 'success' && (
-                <ParseUnitsPlayground decimals={decimals.result} symbol={symbol?.result} />
+                <>
+                  <ParseUnitsPlayground decimals={decimals.result} symbol={symbol?.result} />
+                  <AllowancePanel
+                    tokenAddress={tokenAddress}
+                    decimals={decimals.result}
+                    symbol={symbol?.result}
+                  />
+                </>
               )}
         </div>
       }
@@ -189,7 +197,7 @@ function TokenInfo({ tokenAddress }: { tokenAddress: Address }) {
 // parseUnits는 유효하지 않은 문자열('abc', '1e5', '1.2.3')에 예외를 던진다.
 // 렌더 중에 무방비로 부르면 컴포넌트가 통째로 죽으므로, 예외를 null이라는 값으로 강등시킨다.
 // (입력창의 type="number"는 방어선이 못 된다 — 지수 표기 '1e5'가 그대로 통과함)
-function toRawAmount(amount: string, decimals: number): bigint | null {
+export function toRawAmount(amount: string, decimals: number): bigint | null {
   try {
     return parseUnits(amount, decimals);
   } catch {
