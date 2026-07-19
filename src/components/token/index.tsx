@@ -2,7 +2,7 @@ import { useState } from "react";
 import { formatUnits, isAddress, parseUnits, type Address } from "viem";
 import { useAccount, useReadContracts } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
-import { erc20Abi } from "../../../abis/erc20";
+import { erc20Abi } from "../../abis/erc20";
 
 // ─────────────────────────────────────────────────────────────
 // 실습 2주차 · 토큰 대시보드 (컨트랙트 읽기 + ABI + ERC-20)

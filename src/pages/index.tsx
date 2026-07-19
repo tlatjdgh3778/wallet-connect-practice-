@@ -1,10 +1,10 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
-import { AccountInfo } from './components/account';
-import { ENSInfo } from './components/ens';
-import { BalanaceInfo } from './components/native_balance';
-import { Chain } from './components/chain';
+import { AccountInfo } from '../components/account';
+import { ENSInfo } from '../components/ens';
+import { BalanaceInfo } from '../components/native_balance';
+import { Chain } from '../components/chain';
 
 const Home: NextPage = () => {
 

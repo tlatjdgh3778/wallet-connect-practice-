@@ -7,7 +7,7 @@ import { WagmiProvider } from 'wagmi';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 
 import { config } from '../wagmi';
-import { Header } from './components/header';
+import { Header } from '../components/header';
 
 const client = new QueryClient();
 
