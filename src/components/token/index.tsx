@@ -4,6 +4,7 @@ import { useAccount, useReadContracts } from "wagmi";
 import { mainnet, sepolia } from "wagmi/chains";
 import { erc20Abi } from "../../abis/erc20";
 import { AllowancePanel } from "./AllowancePanel";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ─────────────────────────────────────────────────────────────
 // 실습 2주차 · 토큰 대시보드 (컨트랙트 읽기 + ABI + ERC-20)
@@ -145,7 +146,7 @@ function TokenInfo({ tokenAddress }: { tokenAddress: Address }) {
   
   const erc20Contract = { address: tokenAddress, abi: erc20Abi } as const;
 
-  const { data, isLoading, isError } = useReadContracts({
+  const { data, isLoading, isError, queryKey } = useReadContracts({
     contracts: [
         { ...erc20Contract, functionName: 'name' },
         { ...erc20Contract, functionName: 'symbol' },
@@ -156,6 +157,14 @@ function TokenInfo({ tokenAddress }: { tokenAddress: Address }) {
   });
 
   const [name, symbol, decimals, balanceOf] = data ?? [];
+
+  // 3주차 주제 5. transferFrom이 확정되면 잔액이 바뀌는데, 그 쿼리는 이 컴포넌트에 있다.
+  // queryKey를 아래로 내려보내는 대신 무효화 함수를 내려준다 —
+  // AllowancePanel이 남의 쿼리 키를 알 필요가 없어진다.
+  const queryClient = useQueryClient();
+  const invalidateBalance = () => {
+    queryClient.invalidateQueries({ queryKey });
+  };
   
   if(isDisconnected) {
     return <p>지갑에 연결되지 않았어요.</p>
@@ -185,6 +194,7 @@ function TokenInfo({ tokenAddress }: { tokenAddress: Address }) {
                     tokenAddress={tokenAddress}
                     decimals={decimals.result}
                     symbol={symbol?.result}
+                    onBalanceChanged={invalidateBalance}
                   />
                 </>
               )}
